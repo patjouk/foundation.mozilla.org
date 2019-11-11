@@ -6,7 +6,7 @@
 <html lang="{{ lang_code }}">
   <head>
     <meta charset="utf-8">
-    <title>{% block pageTitle %}Mozilla Foundation - {% if page.specifics.seo_title %}{{ page.specifics.seo_title }}{% else %}{{ page.title }}{% endif %}{% endblock %}</title>
+    <title>{% block page_title %}Mozilla Foundation - {% if page.specifics.seo_title %}{{ page.specifics.seo_title }}{% else %}{{ page.title }}{% endif %}{% endblock %}</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token }}">
@@ -26,10 +26,13 @@
       <meta name="ga-identifier" content="UA-87658599-6">
     {% endblock %}
 
+    {% block coral_talk_meta %}{% endblock %}
+
     <link rel="stylesheet" href="/_css/main.compiled.css">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Nunito+Sans:400,300,700,300i">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Zilla+Slab:300,400,600,700,300i">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:400,700">
+    {% block extended_head %}{% endblock %}
 
     <link rel="apple-touch-icon" type="image/png" sizes="180x180" href="/_images/favicons/apple-touch-icon-180x180@2x.png">
     <link rel="icon" type="image/png" sizes="196x196" href="/_images/favicons/favicon-196x196@2x.png">
@@ -42,11 +45,6 @@
       {% wagtailuserbar 'bottom-left' %}
     {% endif %}
 
-    {% block donate %}
-    <div class="donate-modal-wrapper">
-      <!-- this will be populated by main.js if needed -->
-    </div>
-    {% endblock %}
     {% block page_top_content %}{% endblock %}
 
     <div class="wrapper">
@@ -71,5 +69,7 @@
     {% block script_bundle %}
     <script src="/_js/main.compiled.js"></script>
     {% endblock %}
+
+    {% block extra_scripts %}{% endblock %}
   </body>
 </html>

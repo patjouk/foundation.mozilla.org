@@ -176,10 +176,11 @@ class ModularPage(FoundationMetadataPageMixin, Page):
 
 class MiniSiteNameSpace(ModularPage):
     subpage_types = [
-        'BanneredCampaignPage',
-        'CampaignPage',
-        'OpportunityPage',
         'BlogPage',
+        'CampaignPage',
+        'BanneredCampaignPage',
+        'OpportunityPage',
+        'YoutubeRegretsPage',
     ]
 
     """
@@ -830,10 +831,16 @@ class BlogPage(FoundationMetadataPageMixin, Page):
 
     zen_nav = True
 
+    feature_comments = models.BooleanField(
+        default=False,
+        help_text='Check this box to add a comment section for this blog post.',
+    )
+
     content_panels = Page.content_panels + [
         FieldPanel('author'),
         FieldPanel('category'),
         StreamFieldPanel('body'),
+        FieldPanel('feature_comments'),
     ]
 
     promote_panels = FoundationMetadataPageMixin.promote_panels + [
@@ -847,6 +854,9 @@ class BlogPage(FoundationMetadataPageMixin, Page):
     def get_context(self, request):
         context = super().get_context(request)
         context['related_posts'] = get_content_related_by_tag(self)
+        context['coral_talk_server_url'] = settings.CORAL_TALK_SERVER_URL
+        context['coral_talk'] = context['coral_talk_server_url'] and self.feature_comments
+
         return set_main_site_nav_information(self, context, 'Homepage')
 
 
@@ -1162,7 +1172,7 @@ class HomepageFeaturedHighlights(WagtailOrderable, models.Model):
         return self.page.title + '->' + self.highlight.title
 
 
-class HomepageFeaturedBlogs(models.Model):
+class HomepageFeaturedBlogs(WagtailOrderable, models.Model):
     page = ParentalKey(
         'wagtailpages.Homepage',
         related_name='featured_blogs',
@@ -1175,6 +1185,7 @@ class HomepageFeaturedBlogs(models.Model):
     class Meta:
         verbose_name = 'blog'
         verbose_name_plural = 'blogs'
+        ordering = ['sort_order']  # not automatically inherited!
 
     def __str__(self):
         return self.page.title + '->' + self.blog.title
@@ -1351,18 +1362,18 @@ class Homepage(FoundationMetadataPageMixin, Page):
     ]
 
     subpage_types = [
-        'PrimaryPage',
-        'PeoplePage',
-        'InitiativesPage',
-        'Styleguide',
-        'NewsPage',
-        'ParticipatePage',
-        'ParticipatePage2',
-        'MiniSiteNameSpace',
-        'RedirectingPage',
-        'OpportunityPage',
         'BanneredCampaignPage',
         'IndexPage',
+        'InitiativesPage',
+        'MiniSiteNameSpace',
+        'NewsPage',
+        'OpportunityPage',
+        'ParticipatePage',
+        'ParticipatePage2',
+        'PeoplePage',
+        'PrimaryPage',
+        'RedirectingPage',
+        'Styleguide',
     ]
 
     def get_context(self, request):
@@ -1390,3 +1401,53 @@ class RedirectingPage(Page):
         # Note that due to how this page type works, there is no
         # associated template file in the wagtailpages directory.
         return HttpResponseRedirect(self.URL)
+
+
+class YoutubeRegretsPage(FoundationMetadataPageMixin, Page):
+    headline = models.CharField(
+        max_length=500,
+        help_text='Page headline',
+        blank=True,
+    )
+
+    intro_text = StreamField([
+        ('text', blocks.CharBlock()),
+    ])
+
+    intro_images = StreamField([
+        ('image', customblocks.ImageBlock()),
+    ])
+
+    faq = StreamField(
+        [
+            ('paragraph', blocks.RichTextBlock(
+                features=[
+                    'bold', 'italic',
+                    'h2', 'h3', 'h4', 'h5',
+                    'ol', 'ul',
+                    'link', 'hr',
+                ]
+            ))
+        ],
+        blank=True,
+    )
+
+    regret_stories = StreamField([
+        ('regret_story', customblocks.YoutubeRegretBlock()),
+    ])
+
+    content_panels = Page.content_panels + [
+        FieldPanel('headline'),
+        StreamFieldPanel('intro_text'),
+        StreamFieldPanel('intro_images'),
+        StreamFieldPanel('faq'),
+        StreamFieldPanel('regret_stories'),
+    ]
+
+    zen_nav = True
+
+    def get_context(self, request):
+        context = super().get_context(request)
+        return set_main_site_nav_information(self, context, 'Homepage')
+
+    template = 'wagtailpages/pages/youtube_regrets_page.html'
